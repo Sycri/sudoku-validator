@@ -7,37 +7,43 @@ class Validator {
 
   // Rows start from 0 not 1, up to 8
   getRow(arr, row) {
-    return arr.slice(9 * row, 9 * (row + 1))
+    return arr[row]
   }
 
   // Columns start from 0 not 1, up to 8
   getCol(arr, col) {
-    return arr.filter((_, index) => (index - col) % 9 == 0)
+    return arr.map((value) => value[col])
   }
 
-  // Squares start from 0 not 1, up to 8
+  // Square rows and columns start from 0 not 1, up to 2
   // From left to right, top to bottom
   // Start values of a square from top-left side
-  getSquare(arr, squarePos) {
-    // In 1-dimensional array:
-    // A square in the next row from the start of the previous row is 27 values away
-    // Next column at the start of a row is 3 values away
-    squarePos = Math.floor(squarePos / 3) * 27 + (squarePos % 3) * 3
+  getSquare(arr, row, col) {
+    // In 2-dimensional array:
+    // A new square is available 3 rows or columns away in the array 
+    row *= 3
+    col *= 3
     let square = []
 
-    // In the array the next row is 9 values away
-    for (let i = 0, j; i < 27; i += 9) {
+    for (let i = 0, j; i < 3; ++i) {
       for (j = 0; j < 3; ++j) {
-        square.push(arr[squarePos + i + j])
+        square.push(arr[row + i][col + j])
       }
     }
     return square
   }
 
-  // Convert string to a 1-dimensional number array
-	fromString(sudoku) {
-		return sudoku.split(/\D+/, 81).map(Number)
-	}
+  // Convert string to a 2-dimensional number array
+  fromString(sudoku) {
+    let arr = sudoku.split(/\D+/, 81).map(Number)
+    let matrix = []
+
+    while (arr.length != 0) {
+      matrix.push(arr.splice(0, 9))
+    }
+
+    return matrix
+  }
 
   // Zeroes represent empty space, so they should be removed from an array for unique value checks
   filterZeroesFromArray(arr) {
@@ -49,7 +55,7 @@ class Validator {
   }
 
   isComplete(arr) {
-    return arr.some((value) => value == 0) == false
+    return arr.flat().some((value) => value == 0) == false
   }
 
   checkAllRows(arr) {
@@ -75,12 +81,14 @@ class Validator {
   }
 
   checkAllSquares(arr) {
-    for (let i = 0; i < 9; ++i) {
-      let square = this.getSquare(arr, i)
-      square = this.filterZeroesFromArray(square)
+    for (let i = 0, j; i < 3; ++i) {
+      for (j = 0; j < 3; ++j) {
+        let square = this.getSquare(arr, i, j)
+        square = this.filterZeroesFromArray(square)
 
-      if (!this.uniqueValuesInArray(square))
-        return false
+        if (!this.uniqueValuesInArray(square))
+          return false
+      }
     }
     return true
   }
